@@ -1,0 +1,638 @@
+{
+  "_name_or_path": "chimera-5.1-final",
+  "_v": "5.1.2",
+  "architectures": ["Chimera51ForCausalLM"],
+  "auto_map": {
+    "AutoConfig": "configuration_chimera51.Chimera51Config",
+    "AutoModelForCausalLM": "modeling_chimera51.Chimera51ForCausalLM"
+  },
+  "model_type": "chimera51",
+  "token_ids": [199999, 200058],
+  "hidden_size": 2560,
+  "intermediate_size": 6912,
+  "num_hidden_layers": 28,
+  "num_heads": 40,
+  "head_dim": 64,
+  "hidden_act": "swiglu",
+  "initializer_range": 0.006,
+  "rms_norm_eps": 1e-6,
+  "rms_norm_before_every_linear": true,
+  "vocab_size": 200073,
+  "max_position_embeddings": 4194304,
+  "tie_word_embeddings": true,
+  "torch_dtype": "bfloat16",
+  "use_cache": false,
+  "transformers_version": "4.58.0",
+
+  "§": {
+    "r0":  "2412.06464",
+    "r1":  "2405.04517",
+    "r2":  "2501.00663",
+    "r3":  "2604.12946",
+    "r4":  "2510.04800",
+    "r5":  "2402.17764",
+    "r6":  "2505.08823",
+    "r7":  "2502.11880",
+    "r8":  "2601.07892",
+    "r9":  "2602.05269",
+    "r10": "2503.01840",
+    "r11": "2505.14969",
+    "r12": "2411.15100",
+    "r13": "2601.04426",
+    "r14": "2604.06169",
+    "r15": "2602.02369",
+    "r16": "2402.04624",
+    "r17": "2508.16153",
+    "r18": "2310.00533",
+    "r19": "2404.02258",
+    "r20": "2510.11170",
+    "r21": "2408.15664",
+    "r22": "2512.12602",
+    "r23": "2412.09871",
+    "r24": "2501.15570",
+    "r25": "2506.12119",
+    "r26": "2407.00088",
+    "r27": "2410.16144",
+    "r28": "2512.06443",
+    "r29": "2305.17333",
+    "r30": "2509.00031",
+    "r31": "2305.17190",
+    "r32": "2402.16363",
+    "r33": "2502.12444",
+    "r34": "2603.13931",
+    "r35": "2302.04852",
+    "r36": "2305.02299"
+  },
+
+  "quantization": {
+    "method": "bitnet",
+    "linear_class": "ternary_bitplane",
+    "weight_bits": 1.58,
+    "weight_values": [-1, 0, 1],
+    "weight_scale": "absmean_per_group",
+    "group_size": 128,
+    "activation_bits": 8,
+    "activation_method": "absmax_per_block",
+    "activation_block_size": 64,
+    "accumulator_dtype": "int32",
+    "norm_dtype": "float32",
+    "runtime_kernel": "TL2_bitnet_cpp",
+    "§": ["r5", "r7", "r27"],
+    "sherry_mode": {
+      "enabled": false,
+      "bits": 1.25,
+      "§": "r8"
+    },
+    "hgf_correction": {
+      "enabled": false,
+      "§": "r9"
+    }
+  },
+
+  "backbone": {
+    "type": "hybrid_recurrent_no_attention",
+    "layer_pattern": "GD XM GD TM GD XM GD SK",
+    "layer_pattern_repeat": 3.5,
+    "layer_aliases": {
+      "GD": "gated_deltanet",
+      "XM": "xlstm_m",
+      "TM": "titans_mac",
+      "SK": "tsp_span_knot"
+    },
+    "layer_counts": {"GD": 14, "XM": 7, "TM": 4, "SK": 3},
+    "kv_cache": "none",
+    "§": ["r0", "r1", "r2", "r4"],
+
+    "moe": {
+      "enabled": true,
+      "layers": [3, 7, 11, 15, 19, 23, 27],
+      "n_routed_experts": 16,
+      "n_shared_experts": 1,
+      "num_experts_per_tok": 2,
+      "moe_intermediate_size": 1728,
+      "routing": "noaux_bias",
+      "total_params": "350M",
+      "active_params_per_tok": "44M",
+      "§": ["r21", "r25"]
+    }
+  },
+
+  "gated_deltanet": {
+    "formulation": "S_t = S_{t-1} * (α_t * (I - β_t * k_t * k_t^T)) + β_t * v_t * k_t^T",
+    "alpha_gate": "data_dependent_scalar",
+    "beta_gate": "data_dependent_scalar",
+    "state_size": 64,
+    "chunkwise_parallel": true,
+    "chunk_size": 256,
+    "key_norm": "l2",
+    "§": "r0"
+  },
+
+  "efla": {
+    "enabled": false,
+    "target_layers": "SK",
+    "§": "r22"
+  },
+
+  "xlstm": {
+    "variant": "mLSTM",
+    "exponential_gating": true,
+    "memory_size_per_head": [64, 64],
+    "covariance_update": true,
+    "normalizer_state": "max_stabilized",
+    "§": "r1"
+  },
+
+  "titans": {
+    "memory_type": "MAC",
+    "memory_depth": 2,
+    "surprise_metric": "gradient_with_momentum",
+    "surprise_formula": "S_t = η_t · S_{t-1} − θ_t · ∇ℓ(M_{t-1}; x_t)",
+    "forgetting_formula": "M_t = (1 − α_t) · M_{t-1} + S_t",
+    "persistent_memory_slots": 64,
+    "local_window_size": 1024,
+    "§": "r2"
+  },
+
+  "looping": {
+    "enabled": true,
+    "method": "parcae_zoh_stable",
+    "prelude": [0, 3],
+    "loop": [4, 23],
+    "coda": [24, 27],
+    "loop_range": [1, 6],
+    "loop_default": 2,
+    "stability_A": "diag_negative_exp",
+    "spectral_radius_bound": 1.0,
+    "depth_selection": "stochastic_per_sequence",
+    "adaptive_exit_threshold": 0.01,
+    "backward_truncation": "half",
+    "§": "r3"
+  },
+
+  "span_inference": {
+    "enabled": true,
+    "bank_entries": 524288,
+    "bank_avg_tokens": 5,
+    "bank_max_tokens": 64,
+    "bank_memory_mb": 384,
+    "candidate_sources": [64, 48, 48, 32],
+    "candidate_source_keys": ["semantic_lsh", "grammar_allowed", "cache_hits", "neural_novel"],
+    "candidates_fast": 192,
+    "candidates_reason": 512,
+
+    "tree_verify": {
+      "enabled": true,
+      "method": "STree",
+      "tree_width": 4,
+      "tree_depth": 5,
+      "hardware_aware": true,
+      "§": "r11"
+    },
+
+    "certificate_fields": ["span_id_u32", "semantic_delta_8192b", "grammar_delta_128b", "entity_delta_512b", "debt_delta_64b", "boundary_logprob_i16", "interior_risk_u8"],
+    "certificate_verify_max_us": 100,
+    "adaptive_mask_cache": true,
+    "render_queue_target": 256,
+    "render_queue_max": 2048,
+    "fallback_below_acceptance": 0.5,
+
+    "scoring_keys": ["semantic", "grammar", "memory", "debt", "boundary"],
+    "scoring_weights_fast": [1.0, 0.8, 0.5, 0.7, 0.35],
+    "§": ["r10", "r12"]
+  },
+
+  "tsp_knot": {
+    "energy_terms": {
+      "autoregressive":    [1.0, "embedding_inner_product"],
+      "memory_coherence":  [0.3, "hamming_to_semantic_sketch"],
+      "binding_fidelity":  [0.2, "xor_unbind_popcount"],
+      "grammar":           [0.4, "fst_transition_cost"],
+      "debt":              [0.3, "obligation_delta"]
+    },
+    "relaxation_phase1": "gated_deltanet_update",
+    "relaxation_phase2_max_iters": 3,
+    "relaxation_phase2_flip_fraction": 0.02,
+    "early_exit_delta_e": 1e-4
+  },
+
+  "grammar": {
+    "enabled": true,
+    "modes": ["plain_text", "dialogue", "markdown", "json", "python", "javascript", "sql", "math_latex", "shell"],
+    "representation": "deterministic_fst_plus_weighted",
+    "storage_mb": 64,
+    "hard_constraints": ["balanced_brackets", "valid_json_in_json_mode", "fence_closure", "string_literal_closure"],
+    "soft_constraints": ["sentence_rhythm", "repetition_avoidance", "paragraph_length"],
+    "adaptive_mask_cache": true,
+    "jit_compilation": true,
+    "§": ["r12", "r13"]
+  },
+
+  "semantic_memory": {
+    "vector_bits": 8192,
+    "vector_storage": "uint64_x128",
+    "capacity": 200000,
+    "relations": 500000,
+    "memory_mb": 320,
+    "ops": ["xor_bind", "xor_unbind", "majority_bundle", "popcnt_hamming", "rotate_permute"],
+    "lsh_tables": 64,
+    "lsh_bits_per_table": 14,
+    "hot_cache_entries": 16384,
+    "read_at_every_knot": true,
+    "write_policy": "surprise_threshold_plus_contrastive_validation",
+    "forgetting_policy": "fixed_pool_exponential_decay",
+    "pool_size_fixed": true,
+    "§": ["r15", "r16"]
+  },
+
+  "entropy_valve": {
+    "enabled": true,
+    "metrics": ["span_energy_margin", "grammar_branching", "sketch_instability", "entity_conflicts", "debt_pressure", "queue_depth"],
+    "threshold_bits": 2.0,
+    "type": "inference_time_compute_allocation",
+    "loop_depth_router": {
+      "method": "mod_causal_predictor",
+      "accuracy_target": 0.97,
+      "§": "r19"
+    },
+    "levels": {
+      "low":    {"loops": 1, "min_span": 8, "audit": 0.125},
+      "medium": {"loops": 2, "min_span": 4, "audit": 0.5},
+      "high":   {"loops": 4, "min_span": 1, "audit": 1.0}
+    },
+    "§": "r20"
+  },
+
+  "debt_ledger": {
+    "enabled": true,
+    "obligations": ["close_bracket", "close_string", "close_fence", "resolve_pronoun", "finish_list", "maintain_tense", "complete_sentence", "end_json_object"],
+    "max_outstanding": 64,
+    "pressure_weight": 0.3
+  },
+
+  "self_evolution": {
+    "num_mechanisms": 7,
+
+    "tier1": {
+      "ttt": {
+        "enabled": true,
+        "target_layers": [13, 23],
+        "target_param": "mlp_w_down",
+        "inner_lr": 0.0003,
+        "inner_optimizer": "sgd_momentum",
+        "momentum": 0.9,
+        "objective": "next_token_prediction",
+        "chunk_size": 1024,
+        "update_scope": "full_w_down",
+        "reset_decay": 0.95,
+        "persistence": "per_user_session_file",
+        "§": "r14"
+      },
+      "memory_growth": {
+        "enabled": true,
+        "surprise_threshold": "titans_gradient_magnitude_above_2_sigma",
+        "contrastive_validation": true,
+        "user_explicit_store": true,
+        "max_per_session": 1000,
+        "pool_fixed": true,
+        "forgetting": "random_drop_k_append_k",
+        "persistent": true,
+        "pruning": "low_retrieval_weight_eviction",
+        "§": ["r15", "r16"]
+      }
+    },
+
+    "tier2": {
+      "meta_guidelines": {
+        "enabled": true,
+        "max": 256,
+        "format": "8192bit_xor",
+        "trigger": "contrastive_eval_negative",
+        "§": "r15"
+      },
+      "episodic_cases": {
+        "enabled": true,
+        "retrieval": "soft_q_learning",
+        "max_cases": 4096,
+        "case_bytes": 2048,
+        "weight_update": "outcome_based_ema",
+        "§": "r17"
+      },
+      "self_feedback": {
+        "enabled": true,
+        "confidence_threshold": 0.6,
+        "max_refinement_rounds": 1,
+        "§": "r18"
+      }
+    },
+
+    "tier3": {
+      "span_bank_expansion": {
+        "enabled": true,
+        "min_span_len": 4,
+        "max_new_per_session": 256,
+        "acceptance": "cert_valid AND no_correction AND used_3plus",
+        "persistent": true,
+        "compression": "merge_similar_periodic"
+      },
+      "loop_depth_learning": {
+        "enabled": true,
+        "classifier": "int8_2layer_mlp",
+        "classifier_params": 500000,
+        "signal": "parcae_convergence_speed",
+        "persistent": true
+      }
+    },
+
+    "safety": {
+      "max_growth_mb": {"memory": 512, "span_bank": 128, "episodic": 8, "guidelines": 2},
+      "rollback_on_degradation": true,
+      "monitor": "certificate_failure_rate_and_rollback_rate",
+      "freeze_threshold": 0.05,
+      "user_reset": true,
+      "state_file": "chimera51_evolution.state"
+    }
+  },
+
+  "braid_state": {
+    "continuous_hidden": [2560, "float32"],
+    "fast_hidden": [2560, "int8"],
+    "semantic_sketch": [8192, "uint64_x128"],
+    "entity_table": {"slots": 256, "slot_bits": 512, "binding": "xor_role_filler"},
+    "grammar_stack": {"slots": 64, "width_bits": 128},
+    "debt_ledger_slots": 64,
+    "per_stream_mb": 30,
+    "kv_growth_per_token": 0
+  },
+
+  "modes": {
+    "fast":      {"tps": 200, "neural_hz": 40, "span_avg": 5, "loops": 1, "audit": 0.125},
+    "balanced":  {"tps": 120, "neural_hz": 30, "span_avg": 4, "loops": 2, "audit": 0.5},
+    "reasoning": {"tps": 40,  "neural_hz": 20, "span_avg": 2, "loops": 4, "audit": 1.0}
+  },
+
+  "generation": {
+    "temperature": 0.7,
+    "top_p": 0.92,
+    "repetition_penalty": 1.08,
+    "max_new_tokens": 4096,
+    "do_sample": true,
+    "stream": true
+  },
+
+  "training": {
+    "phases": [
+      {
+        "name": "pretrain",
+        "tokens": "2T",
+        "data": ["FineWeb-Edu", "SlimPajama", "StarCoder-data", "multilingual-CC"],
+        "seq_len": 4096,
+        "batch_tokens": "4M",
+        "optimizer": "AdamW",
+        "lr": 3e-4,
+        "schedule": "cosine_warmup",
+        "warmup_steps": 2000,
+        "weight_decay": 0.1,
+        "grad_clip": 1.0,
+        "ternary": "native_qat_ste",
+        "§": ["r5", "r6"]
+      },
+      {
+        "name": "ctx_extend",
+        "stages": [
+          [4096,  "main"],
+          [16384, 10000, 1e-5],
+          [65536, 5000,  5e-6],
+          [262144, 2000, 2e-6]
+        ]
+      },
+      {
+        "name": "sft",
+        "data": ["UltraChat-200k", "ShareGPT-cleaned"],
+        "epochs": 3,
+        "lr": 2e-5
+      },
+      {
+        "name": "dpo",
+        "data": "UltraFeedback-binarized",
+        "epochs": 1,
+        "lr": 5e-7,
+        "beta": 0.1
+      }
+    ],
+    "distillation_init": {
+      "enabled": false,
+      "method": "ARWKV_style",
+      "teacher": "Qwen-2.5-7B",
+      "tokens": "1B",
+      "§": "r24"
+    }
+  },
+
+  "byte_level": {
+    "enabled": false,
+    "encoder_params": "50M",
+    "encoder_depth": 8,
+    "patching": "entropy_threshold",
+    "decoder_params": "50M",
+    "§": "r23"
+  },
+
+  "memory_budget_mb": {
+    "_keys": ["ternary_weights", "moe_experts", "span_bank", "grammar", "semantic_mem", "episodic", "guidelines", "braid", "activations", "render_queue", "evolution", "runtime_os"],
+    "_vals": [410, 66, 384, 64, 320, 8, 2, 30, 80, 32, 128, 1000],
+    "total": 2524,
+    "headroom_8gb": 4876,
+    "growth_ceiling": 650,
+    "max_with_growth": 3174
+  },
+
+  "deployment": {
+    "batch_size": 1,
+    "max_streams": 16,
+    "per_stream_mb": 30,
+    "shared": ["weights", "span_bank", "grammar"],
+    "mmap": ["weights", "span_bank"],
+    "cold_start_s": 2.5,
+    "watchdog_tick_ms": 20,
+    "watchdog_max_overruns": 8,
+    "deterministic": true,
+    "seed_controls_all": true,
+    "platforms": ["x86_64_avx2", "aarch64_neon", "wasm_simd128", "apple_silicon_amx"]
+  },
+
+  "diagnostics": {
+    "telemetry": true,
+    "report_interval_tokens": 256,
+    "metrics": [
+      "surface_tps", "neural_knot_tps", "mean_span_length",
+      "span_acceptance_rate", "certificate_failure_rate",
+      "rollback_count", "queue_depth", "loop_count_mean",
+      "memory_mb", "evolution_events", "grammar_violations_prevented",
+      "contrastive_eval_ratio", "self_refinement_trigger_rate",
+      "episodic_case_hit_rate", "moe_expert_load_balance",
+      "gd_alpha_mean", "gd_beta_mean", "ttt_loss_delta"
+    ],
+    "thresholds": {
+      "min_span_accept": 0.70,
+      "max_cert_fail": 0.05,
+      "max_rollback": 0.02,
+      "min_contrastive_benefit": 0.0,
+      "max_moe_imbalance": 0.15
+    }
+  },
+
+  "context_tiers": [
+    {"name": "recent_ring",     "tokens": 4096, "mb": 16},
+    {"name": "braid_state",     "mb": 30},
+    {"name": "semantic_memory", "mb": 320},
+    {"name": "ttt_compressed",  "mb": 24},
+    {"name": "span_trace",      "entries": 32768, "mb": 32},
+    {"name": "episodic_cases",  "entries": 4096,  "mb": 8}
+  ],
+
+  "multimodal": {
+    "enabled": true,
+    "modalities": ["text", "image", "audio"],
+    "vision": {"type": "gated_deltanet_tiny", "depth": 12, "hidden": 384, "patch": 16, "out": 2560, "quant": "ternary"},
+    "audio":  {"type": "gated_deltanet_audio_tiny", "depth": 6, "hidden": 256, "out": 2560, "quant": "ternary"}
+  },
+
+  "safety": {
+    "format_guards": ["json_strict", "code_fence_closure", "markdown_table_guard"],
+    "memory_limit_enforced": true,
+    "crash_only_allocator": true,
+    "user_facts_override_weak_memory": true,
+    "state_uncertainty_when_unsure": true
+  },
+
+  "files": {
+    "weights": "chimera51.b158",
+    "moe": "chimera51_experts.b158",
+    "spans": "chimera51_spans.sfpack",
+    "grammar": "chimera51_grammar.fstpack",
+    "memory_seed": "chimera51_memory.seedpack",
+    "tokenizer": "chimera51_tokenizer.model",
+    "evolution": "chimera51_evolution.state"
+  },
+
+  "params": {
+    "base": "2.3B",
+    "moe_total": "350M",
+    "physical": "2.65B",
+    "effective_2loops": "4.2B",
+    "effective_6loops": "9.5B",
+    "active_per_token": "2.39B",
+    "weight_mb": 476,
+    "total_mb": 2524
+  },
+
+  "P3_ternary_compute": {
+    "_note": "v5.1.2 — Honest section. Documents ONLY what is implemented and measured. Previous v5.1.0 claims of '1080× speedup' were aspirational and not implementable.",
+
+    "thesis": "Ternary weights {-1,0,1} enable 16× memory reduction via 2-bit packed storage. On CPU, training speed is dominated by MKL BLAS — raw ternary matmul is not faster than FP32 at small-to-medium sizes. The real wins are: (1) 16× less RAM enabling larger models on limited hardware, (2) 16× less memory bandwidth for large models where DRAM is the bottleneck, (3) MeZO eliminates the backward pass entirely (2× forward only). Inference post-training uses LUT-based kernels (T-MAC, bitnet.cpp) for true speedup.",
+
+    "implemented_optimizations": {
+      "mezo_optimizer": {
+        "status": "IMPLEMENTED",
+        "description": "Memory-Efficient Zeroth-Order optimizer — eliminates backward pass entirely. 2 forward passes per step.",
+        "benefit": "Memory = 2× model size (no activations, no gradients, no optimizer states). Ideal for CPU with complex recurrences.",
+        "limitation": "Requires ~32× more steps to converge than AdamW. Best for fine-tuning, not pretraining from scratch.",
+        "§": "r29"
+      },
+      "bf16_autocast": {
+        "status": "IMPLEMENTED",
+        "description": "BFloat16 automatic mixed precision on CPU via torch.autocast('cpu', dtype=torch.bfloat16).",
+        "benefit": "2-4× faster matmuls on Intel Sapphire Rapids+ (AMX) or Ice Lake+ (AVX-512-BF16). Falls back to FP32 emulation on older CPUs.",
+        "limitation": "Forward-pass only. Gradients remain FP32."
+      },
+      "torch_compile": {
+        "status": "IMPLEMENTED",
+        "description": "torch.compile with Inductor backend for CPU. Fuses ops, reduces Python overhead.",
+        "benefit": "1.3-2× overall training throughput.",
+        "limitation": "First iteration is slow (compilation). Dynamic shapes supported."
+      },
+      "parallel_mlstm": {
+        "status": "IMPLEMENTED",
+        "description": "Replaced O(T) Python loop with parallel log-space cumulative gate computation + batched QKV attention.",
+        "benefit": "~10-50× faster for mLSTM layers on CPU (seq_len ≥ 64).",
+        "§": "r1"
+      },
+      "parallel_titans_mac": {
+        "status": "IMPLEMENTED",
+        "description": "Replaced O(T) Python loop with causal decay attention + vectorized contribution computation.",
+        "benefit": "~5-20× faster for Titans MAC layers on CPU.",
+        "§": "r2"
+      },
+      "sort_based_moe": {
+        "status": "IMPLEMENTED",
+        "description": "Sort tokens by expert ID → process contiguous blocks → scatter_add back. Cache-friendly CPU dispatch.",
+        "benefit": "Better cache locality than random-access per-expert dispatch.",
+        "§": "r21"
+      },
+      "gradient_checkpointing": {
+        "status": "IMPLEMENTED",
+        "description": "Per-block activation checkpointing for AdamW mode.",
+        "benefit": "30-60% memory reduction, enabling larger batches."
+      },
+      "cpu_thread_tuning": {
+        "status": "IMPLEMENTED",
+        "description": "OMP_NUM_THREADS, KMP_AFFINITY=compact, KMP_BLOCKTIME=1, torch.set_num_threads/interop_threads.",
+        "benefit": "10-30% throughput improvement from optimal thread placement."
+      },
+      "ipex_integration": {
+        "status": "IMPLEMENTED (optional)",
+        "description": "Auto-detected Intel Extension for PyTorch. ipex.optimize() with BF16 + AMX kernel selection.",
+        "benefit": "Additional 30-50% on Intel CPUs."
+      },
+      "ternary_qat_ste": {
+        "status": "IMPLEMENTED",
+        "description": "BitNet 1.58 quantization-aware training with STE. Per-group AbsMean weight quantization, per-block AbsMax int8 activations.",
+        "benefit": "Model learns ternary weight distribution. Enables efficient inference with LUT-based kernels (bitnet.cpp, T-MAC) post-training.",
+        "limitation": "Training itself is NOT faster than FP16 — STE backward pass uses FP32 matmuls.",
+        "§": ["r5", "r7"]
+      },
+      "two_bit_packed_weights": {
+        "status": "IMPLEMENTED v5.1.2",
+        "description": "Ternary weights packed as 2-bit uint8 (4 weights per byte). Custom C++ kernel with OpenMP for unpack.",
+        "benefit": "16× less storage vs FP32 (e.g. 2.5B model: 10GB → 0.6GB). 94% less memory bandwidth for weight loading.",
+        "limitation": "Unpack overhead makes single-layer forward ~0.5-0.7× FP32 at small sizes. Win is at large model sizes where DRAM bandwidth dominates.",
+        "implementation": "pack_ternary_fast() + unpack_into() in C++ with OpenMP. Pre-allocated float buffer reused across steps."
+      },
+      "zero_multiply_forward": {
+        "status": "IMPLEMENTED v5.1.2",
+        "description": "Forward and backward grad_x use ternary unpack + MKL BLAS. The matmul sees only add/sub operations conceptually, but executed via BLAS for performance.",
+        "benefit": "No FP32 multiply on ternary weights (unpack produces {-α,0,+α}). Grad_x path also zero-multiply.",
+        "limitation": "BLAS still executes multiply-add; the zero-multiply is at the algorithmic level, not instruction-level.",
+        "note": "True instruction-level zero-multiply requires custom assembly (VPSHUFB LUT) — not implemented due to backward incompatibility with STE."
+      },
+      "ternary_mezo_sparse": {
+        "status": "IMPLEMENTED v5.1.2",
+        "description": "MeZO perturbation and update skip zero-weight positions (~33% of ternary weights). C++ kernel with per-thread deterministic LCG.",
+        "benefit": "33% fewer perturbation operations per step. Skips ~1/3 of random number generation and memory writes.",
+        "limitation": "Only applies to BitLinear layers. Other params (norms, biases, embeddings) still fully perturbed."
+      },
+      "sparse_grad_w_masking": {
+        "status": "IMPLEMENTED v5.1.2",
+        "description": "STE backward grad_w masks 'deep zero' weights (|w_scaled| < 0.3) to zero.",
+        "benefit": "Saves ~10-15% of grad_w computation (fewer elements in outer product).",
+        "limitation": "Small gain; FP32 matmul still dominates backward time."
+      }
+    },
+
+    "not_implemented": {
+      "elut_training": "ELUT/T-MAC kernels apply to INFERENCE only. LUT precomputation is invalidated by weight updates during training.",
+      "mixture_of_depths": "MoD requires specific router architecture. Not implemented in current backbone.",
+      "sparse_backprop": "SparseProp requires ≥90% weight sparsity. Incompatible with QAT from random init (~33% zeros)."
+    },
+
+    "realistic_performance": {
+      "cpu_training_tiny_35M": {"hardware": "i7-14700T", "throughput": "~50-200 tok/s", "note": "With MeZO+BF16+compile"},
+      "cpu_training_small_150M": {"hardware": "i7-14700T", "throughput": "~10-50 tok/s", "note": "With MeZO+BF16+compile"},
+      "cpu_inference_ternary": {"note": "Post-training with bitnet.cpp/T-MAC: 30-127 tok/s for 700M-3B models"},
+      "gpu_training_comparison": "GPU (A100) is 50-150× faster than CPU for training equivalent model sizes. CPU training is best for fine-tuning (MeZO), not pretraining."
+    },
+
+    "§_paradigm": ["r26", "r27", "r28", "r29", "r30", "r31", "r32", "r33", "r5", "r34", "r7", "r19"]
+  }
+}
